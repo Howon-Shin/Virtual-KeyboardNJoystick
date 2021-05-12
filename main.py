@@ -7,6 +7,17 @@ from PyQt5.QtGui import QDropEvent, QDragEnterEvent, QMouseEvent, QDrag, QMoveEv
 import pyautogui
 
 
+# class DragButton(QPushButton):
+#     def __init__(self, title):
+#         super(DragButton, self).__init__(title, self)
+#
+#     def mousePressEvent(self, e: QMouseEvent):
+#         self.position = e.globalPos() - self.pos()
+#         e.accept()
+#
+#     def mouseMoveEvent(self, e: QMouseEvent):
+#         se
+
 class VirtualKeyboard(QWidget):
 
     def __init__(self):
@@ -22,6 +33,7 @@ class VirtualKeyboard(QWidget):
         self.currBtn = None
         self.allBtns = []
         self.keyBtns = []
+        self.moveEn = False
 
         self.initUI()
         self.no_focus()
@@ -39,12 +51,22 @@ class VirtualKeyboard(QWidget):
                                       "border-radius: 4px")
         self.settingBtn.setGeometry(600, 50, 60, 30)
 
-        self.moveBtn = QPushButton('---', self)
+        self.moveBtn = QLabel('---', self)
+        self.moveBtn.setAlignment(Qt.AlignCenter)
         self.moveBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                   "background-color: rgba(0, 0, 0, 5);"
+                                   "border: 1px solid rgb(255, 255, 255);"
+                                   )
+        self.moveBtn.setGeometry(0, 0, 50, 25)
+
+        self.addBtn = QPushButton('추가', self)
+        self.addBtn.setStyleSheet("color: rgb(255, 255, 255);"
                                    "background-color: rgba(0, 0, 0, 5);"
                                    "border: 2px solid rgb(255, 255, 255);"
                                    "border-radius: 4px")
-        self.moveBtn.setGeometry(0, 0, 45, 20)
+        self.addBtn.setGeometry(500, 50, 60, 30)
+        self.addBtn.hide()
+
 
         self.btnLeft = QPushButton('Left', self)
         self.btnLeft.setStyleSheet("color: rgb(255, 255, 255);"
@@ -64,7 +86,7 @@ class VirtualKeyboard(QWidget):
         self.keyBtns.append(self.btnA)
 
         self.allBtns.append(self.settingBtn)
-        self.allBtns.append(self.moveBtn)
+        self.allBtns.append(self.addBtn)
 
         for btn in self.keyBtns:
             btn.setAutoRepeatInterval(5)
@@ -75,7 +97,6 @@ class VirtualKeyboard(QWidget):
             self.allBtns.append(btn)
 
         self.btn_press_connect(self.settingBtn)
-        self.btn_press_connect(self.moveBtn)
 
         self.settingBtn.clicked.connect(self.setting_click)
 
@@ -88,6 +109,7 @@ class VirtualKeyboard(QWidget):
 
     def key_click(self, btn):
         self.currBtn = btn
+        self.moveEn = False
 
         if not self.setting and btn in self.keyBtns:
             pyautogui.press(btn.text())
@@ -101,6 +123,7 @@ class VirtualKeyboard(QWidget):
                                           "border-radius: 4px")
             self.currBtn = None
             self.settingBackground.hide()
+            self.addBtn.hide()
         else:
             self.setting = True
             self.settingBtn.setStyleSheet("color: rgb(255, 255, 255);"
@@ -108,6 +131,7 @@ class VirtualKeyboard(QWidget):
                                           "border: 2px solid rgb(255, 255, 255);"
                                           "border-radius: 4px")
             self.settingBackground.show()
+            self.addBtn.show()
 
     def dropEvent(self, e: QDropEvent):
         try:
@@ -124,14 +148,22 @@ class VirtualKeyboard(QWidget):
         e.accept()
 
     def mouseMoveEvent(self, e: QMouseEvent):
-        if e.buttons() != Qt.LeftButton and ~self.setting:
+        if e.buttons() == Qt.RightButton:
             return
 
-        mime_data = QMimeData()
-        drag = QDrag(self)
-        drag.setMimeData(mime_data)
+        if self.setting:
+            mime_data = QMimeData()
+            drag = QDrag(self)
+            drag.setMimeData(mime_data)
 
-        drag.exec_(Qt.MoveAction)
+            drag.exec_(Qt.MoveAction)
+        elif self.moveEn:
+            self.move(e.globalPos() - self.mouse_position)
+
+    def mousePressEvent(self, e: QMouseEvent):
+        self.mouse_position = e.globalPos() - self.pos()
+        self.moveEn = True
+        e.accept()
 
     def no_focus(self):
         import ctypes
