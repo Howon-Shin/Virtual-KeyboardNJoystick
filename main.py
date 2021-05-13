@@ -1,22 +1,11 @@
 import sys
 
-from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel
+from PyQt5.QtCore import Qt, QMimeData, QPoint
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QComboBox
 from PyQt5.QtGui import QDropEvent, QDragEnterEvent, QMouseEvent, QDrag, QMoveEvent
 
 import pyautogui
 
-
-# class DragButton(QPushButton):
-#     def __init__(self, title):
-#         super(DragButton, self).__init__(title, self)
-#
-#     def mousePressEvent(self, e: QMouseEvent):
-#         self.position = e.globalPos() - self.pos()
-#         e.accept()
-#
-#     def mouseMoveEvent(self, e: QMouseEvent):
-#         se
 
 class VirtualKeyboard(QWidget):
 
@@ -61,12 +50,41 @@ class VirtualKeyboard(QWidget):
 
         self.addBtn = QPushButton('추가', self)
         self.addBtn.setStyleSheet("color: rgb(255, 255, 255);"
-                                   "background-color: rgba(0, 0, 0, 5);"
-                                   "border: 2px solid rgb(255, 255, 255);"
-                                   "border-radius: 4px")
+                                  "background-color: rgba(0, 0, 0, 5);"
+                                  "border: 2px solid rgb(255, 255, 255);"
+                                  "border-radius: 4px")
         self.addBtn.setGeometry(500, 50, 60, 30)
         self.addBtn.hide()
 
+        self.addCombo = QComboBox(self)
+        self.addCombo.addItems(['tab', 'enter', 'enter(r)', 'space', '!', '"', '#', '$', '%', '&', "'", '(',
+                                ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7',
+                                '8', '9', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`',
+                                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+                                'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~',
+                                'accept', 'add', 'alt', 'altleft', 'altright', 'apps', 'backspace',
+                                'browserback', 'browserfavorites', 'browserforward', 'browserhome',
+                                'browserrefresh', 'browsersearch', 'browserstop', 'capslock', 'clear',
+                                'convert', 'ctrl', 'ctrlleft', 'ctrlright', 'decimal', 'del', 'delete',
+                                'divide', 'down', 'end', 'enter', 'esc', 'escape', 'execute', 'f1', 'f10',
+                                'f11', 'f12', 'f13', 'f14', 'f15', 'f16', 'f17', 'f18', 'f19', 'f2', 'f20',
+                                'f21', 'f22', 'f23', 'f24', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9',
+                                'final', 'fn', 'hanguel', 'hangul', 'hanja', 'help', 'home', 'insert', 'junja',
+                                'kana', 'kanji', 'launchapp1', 'launchapp2', 'launchmail',
+                                'launchmediaselect', 'left', 'modechange', 'multiply', 'nexttrack',
+                                'nonconvert', 'num0', 'num1', 'num2', 'num3', 'num4', 'num5', 'num6',
+                                'num7', 'num8', 'num9', 'numlock', 'pagedown', 'pageup', 'pause', 'pgdn',
+                                'pgup', 'playpause', 'prevtrack', 'print', 'printscreen', 'prntscrn',
+                                'prtsc', 'prtscr', 'return', 'right', 'scrolllock', 'select', 'separator',
+                                'shift', 'shiftleft', 'shiftright', 'sleep', 'space', 'stop', 'subtract', 'tab',
+                                'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
+                                'command', 'option', 'optionleft', 'optionright'])
+        self.addCombo.setStyleSheet("color: rgb(255, 255, 255);"
+                                    "background-color: rgba(0, 0, 0, 5);"
+                                    "border: 2px solid rgb(255, 255, 255);"
+                                    "border-radius: 4px")
+        self.addCombo.setGeometry(400, 50, 100, 20)
+        self.addCombo.hide()
 
         self.btnLeft = QPushButton('Left', self)
         self.btnLeft.setStyleSheet("color: rgb(255, 255, 255);"
@@ -75,7 +93,7 @@ class VirtualKeyboard(QWidget):
                                    "border-radius: 25px")
         self.btnLeft.setGeometry(600, 300, 50, 50)
 
-        self.btnA = QPushButton('A', self)
+        self.btnA = QPushButton('a', self)
         self.btnA.setStyleSheet("color: rgb(255, 255, 255);"
                                 "background-color: rgba(0, 0, 0, 5);"
                                 "border: 2px solid rgb(255, 255, 255);"
@@ -97,8 +115,10 @@ class VirtualKeyboard(QWidget):
             self.allBtns.append(btn)
 
         self.btn_press_connect(self.settingBtn)
-
         self.settingBtn.clicked.connect(self.setting_click)
+
+        self.btn_press_connect(self.addBtn)
+        self.addBtn.clicked.connect(self.add_click)
 
         self.setWindowTitle(self.title)
         self.setGeometry(300, 300, 700, 400)
@@ -108,11 +128,14 @@ class VirtualKeyboard(QWidget):
         btn.pressed.connect(lambda: self.key_click(btn))
 
     def key_click(self, btn):
-        self.currBtn = btn
-        self.moveEn = False
+        self.set_currBtn(btn)
 
         if not self.setting and btn in self.keyBtns:
-            pyautogui.press(btn.text())
+            pyautogui.press(self.convert_key_str(btn.text()))
+
+    def set_currBtn(self, btn):
+        self.currBtn = btn
+        self.moveEn = False
 
     def setting_click(self):
         if self.setting:
@@ -124,25 +147,55 @@ class VirtualKeyboard(QWidget):
             self.currBtn = None
             self.settingBackground.hide()
             self.addBtn.hide()
+            self.addCombo.hide()
         else:
             self.setting = True
+            self.currBtn = None
             self.settingBtn.setStyleSheet("color: rgb(255, 255, 255);"
                                           "background-color: rgba(0, 0, 0, 100);"
                                           "border: 2px solid rgb(255, 255, 255);"
                                           "border-radius: 4px")
             self.settingBackground.show()
             self.addBtn.show()
+            self.addCombo.show()
+
+    def add_click(self):
+        try:
+            self.newBtn = QPushButton(self.addCombo.currentText(), self)
+            self.newBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                      "background-color: rgba(0, 0, 0, 5);"
+                                      "border: 2px solid rgb(255, 255, 255);"
+                                      "border-radius: 25px")
+            self.newBtn.setGeometry(500, 100, 50, 50)
+            self.btn_press_connect(self.newBtn)
+            self.newBtn.show()
+            self.keyBtns.append(self.newBtn)
+        except Exception as ex:
+            print(ex)
+
+    def convert_key_str(self, text):
+        if text == 'tab':
+            return '\t'
+        elif text == 'enter':
+            return '\n'
+        elif text == 'enter(r)':
+            return '\r'
+        elif text == 'space':
+            return ' '
+        else:
+            return text
 
     def dropEvent(self, e: QDropEvent):
-        try:
-            if self.setting:
-                position = e.pos()
-                self.currBtn.move(position)
+        if self.setting and self.currBtn is not None:
+            position = e.pos()
+            self.currBtn.move(position)
+            if self.currBtn == self.addBtn:
+                self.addCombo.move(position - QPoint(100, 0))
 
-                e.setDropAction(Qt.MoveAction)
-            e.accept()
-        except Exception as e:
-            print(e)
+            self.currBtn = None
+
+            e.setDropAction(Qt.MoveAction)
+        e.accept()
 
     def dragEnterEvent(self, e: QMouseEvent):
         e.accept()
@@ -164,6 +217,9 @@ class VirtualKeyboard(QWidget):
         self.mouse_position = e.globalPos() - self.pos()
         self.moveEn = True
         e.accept()
+
+    def mouseReleaseEvent(self, e: QMouseEvent):
+        self.currBtn = None
 
     def no_focus(self):
         import ctypes
