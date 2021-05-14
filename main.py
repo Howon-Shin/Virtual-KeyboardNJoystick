@@ -23,11 +23,14 @@ class VirtualKeyboard(QWidget):
         self.allBtns = []
         self.keyBtns = []
         self.moveEn = False
+        self.sizeEn = False
 
         self.initUI()
         self.no_focus()
 
     def initUI(self):
+        self.setGeometry(300, 300, 700, 400)
+
         self.settingBackground = QLabel('', self)
         self.settingBackground.hide()
         self.settingBackground.setGeometry(0, 0, 1000, 1000)
@@ -47,6 +50,14 @@ class VirtualKeyboard(QWidget):
                                    "border: 1px solid rgb(255, 255, 255);"
                                    )
         self.moveBtn.setGeometry(0, 0, 50, 25)
+
+        self.sizeBtn = QLabel('---', self)
+        self.sizeBtn.setAlignment(Qt.AlignCenter)
+        self.sizeBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                   "background-color: rgba(0, 0, 0, 5);"
+                                   "border: 1px solid rgb(255, 255, 255);"
+                                   )
+        self.sizeBtn.setGeometry(self.width() - 50, self.height() - 25, 50, 25)
 
         self.addBtn = QPushButton('추가', self)
         self.addBtn.setStyleSheet("color: rgb(255, 255, 255);"
@@ -121,7 +132,6 @@ class VirtualKeyboard(QWidget):
         self.addBtn.clicked.connect(self.add_click)
 
         self.setWindowTitle(self.title)
-        self.setGeometry(300, 300, 700, 400)
         self.show()
 
     def btn_press_connect(self, btn):
@@ -136,6 +146,7 @@ class VirtualKeyboard(QWidget):
     def set_currBtn(self, btn):
         self.currBtn = btn
         self.moveEn = False
+        self.sizeEn = False
 
     def setting_click(self):
         if self.setting:
@@ -155,6 +166,7 @@ class VirtualKeyboard(QWidget):
                                           "background-color: rgba(0, 0, 0, 100);"
                                           "border: 2px solid rgb(255, 255, 255);"
                                           "border-radius: 4px")
+            self.settingBackground.resize(self.size())
             self.settingBackground.show()
             self.addBtn.show()
             self.addCombo.show()
@@ -212,10 +224,25 @@ class VirtualKeyboard(QWidget):
             drag.exec_(Qt.MoveAction)
         elif self.moveEn:
             self.move(e.globalPos() - self.mouse_position)
+        elif self.sizeEn:
+            self.mouse_position_move = e.globalPos() - self.pos()
+            self.increaesd_size = self.mouse_position_move - self.mouse_position
+            self.resize(self.width() + self.increaesd_size.x(), self.height() + self.increaesd_size.y())
+            self.mouse_position = self.mouse_position_move
+            self.sizeBtn.move(self.width() - 50, self.height() - 25)
 
     def mousePressEvent(self, e: QMouseEvent):
-        self.mouse_position = e.globalPos() - self.pos()
-        self.moveEn = True
+        self.my_position = self.pos()
+        self.mouse_position = e.globalPos() - self.my_position
+        self.mid_x = self.my_position.x() + self.width()/2
+
+        if e.globalPos().x() < self.mid_x:
+            self.moveEn = True
+            self.sizeEn = False
+        else:
+            self.sizeEn = True
+            self.moveEn = False
+
         e.accept()
 
     def mouseReleaseEvent(self, e: QMouseEvent):
