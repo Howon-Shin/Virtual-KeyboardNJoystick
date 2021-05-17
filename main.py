@@ -36,12 +36,41 @@ class VirtualKeyboard(QWidget):
         self.settingBackground.setGeometry(0, 0, 1000, 1000)
         self.setStyleSheet("background-color: rgba(0, 0, 0, 100)")
 
-        self.settingBtn = QPushButton('설정', self)
-        self.settingBtn.setStyleSheet("color: rgb(255, 255, 255);"
-                                      "background-color: rgba(0, 0, 0, 5);"
-                                      "border: 2px solid rgb(255, 255, 255);"
-                                      "border-radius: 4px")
-        self.settingBtn.setGeometry(600, 50, 60, 30)
+        import os
+        if os.path.exists('save.txt'):
+            try:
+                self.load_btns()
+            except Exception as e:
+                print(e)
+                os.remove('save.txt')
+                os.execl(sys.executable, sys.executable, *sys.argv)
+        else:
+            self.add_system_btns([600, 50], [500, 50], [self.width() - 25, 0])
+
+            self.btnLeft = QPushButton('Left', self)
+            self.btnLeft.setStyleSheet("color: rgb(255, 255, 255);"
+                                       "background-color: rgba(0, 0, 0, 5);"
+                                       "border: 2px solid rgb(255, 255, 255);"
+                                       "border-radius: 25px")
+            self.btnLeft.setGeometry(600, 300, 50, 50)
+
+            self.btnA = QPushButton('a', self)
+            self.btnA.setStyleSheet("color: rgb(255, 255, 255);"
+                                    "background-color: rgba(0, 0, 0, 5);"
+                                    "border: 2px solid rgb(255, 255, 255);"
+                                    "border-radius: 25px")
+            self.btnA.setGeometry(200, 200, 50, 50)
+
+            self.keyBtns.append(self.btnLeft)
+            self.keyBtns.append(self.btnA)
+
+            for btn in self.keyBtns:
+                btn.setAutoRepeatInterval(5)
+                btn.setAutoRepeat(True)
+
+                self.btn_press_connect(btn)
+
+                self.allBtns.append(btn)
 
         self.moveBtn = QLabel('---', self)
         self.moveBtn.setAlignment(Qt.AlignCenter)
@@ -59,77 +88,14 @@ class VirtualKeyboard(QWidget):
                                    )
         self.sizeBtn.setGeometry(self.width() - 50, self.height() - 25, 50, 25)
 
-        self.addBtn = QPushButton('추가', self)
-        self.addBtn.setStyleSheet("color: rgb(255, 255, 255);"
-                                  "background-color: rgba(0, 0, 0, 5);"
-                                  "border: 2px solid rgb(255, 255, 255);"
-                                  "border-radius: 4px")
-        self.addBtn.setGeometry(500, 50, 60, 30)
-        self.addBtn.hide()
-
-        self.addCombo = QComboBox(self)
-        self.addCombo.addItems(['tab', 'enter', 'enter(r)', 'space', '!', '"', '#', '$', '%', '&', "'", '(',
-                                ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7',
-                                '8', '9', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`',
-                                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-                                'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~',
-                                'accept', 'add', 'alt', 'altleft', 'altright', 'apps', 'backspace',
-                                'browserback', 'browserfavorites', 'browserforward', 'browserhome',
-                                'browserrefresh', 'browsersearch', 'browserstop', 'capslock', 'clear',
-                                'convert', 'ctrl', 'ctrlleft', 'ctrlright', 'decimal', 'del', 'delete',
-                                'divide', 'down', 'end', 'enter', 'esc', 'escape', 'execute', 'f1', 'f10',
-                                'f11', 'f12', 'f13', 'f14', 'f15', 'f16', 'f17', 'f18', 'f19', 'f2', 'f20',
-                                'f21', 'f22', 'f23', 'f24', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9',
-                                'final', 'fn', 'hanguel', 'hangul', 'hanja', 'help', 'home', 'insert', 'junja',
-                                'kana', 'kanji', 'launchapp1', 'launchapp2', 'launchmail',
-                                'launchmediaselect', 'left', 'modechange', 'multiply', 'nexttrack',
-                                'nonconvert', 'num0', 'num1', 'num2', 'num3', 'num4', 'num5', 'num6',
-                                'num7', 'num8', 'num9', 'numlock', 'pagedown', 'pageup', 'pause', 'pgdn',
-                                'pgup', 'playpause', 'prevtrack', 'print', 'printscreen', 'prntscrn',
-                                'prtsc', 'prtscr', 'return', 'right', 'scrolllock', 'select', 'separator',
-                                'shift', 'shiftleft', 'shiftright', 'sleep', 'space', 'stop', 'subtract', 'tab',
-                                'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
-                                'command', 'option', 'optionleft', 'optionright'])
-        self.addCombo.setStyleSheet("color: rgb(255, 255, 255);"
-                                    "background-color: rgba(0, 0, 0, 5);"
-                                    "border: 2px solid rgb(255, 255, 255);"
-                                    "border-radius: 4px")
-        self.addCombo.setGeometry(400, 50, 100, 20)
-        self.addCombo.hide()
-
-        self.btnLeft = QPushButton('Left', self)
-        self.btnLeft.setStyleSheet("color: rgb(255, 255, 255);"
-                                   "background-color: rgba(0, 0, 0, 5);"
-                                   "border: 2px solid rgb(255, 255, 255);"
-                                   "border-radius: 25px")
-        self.btnLeft.setGeometry(600, 300, 50, 50)
-
-        self.btnA = QPushButton('a', self)
-        self.btnA.setStyleSheet("color: rgb(255, 255, 255);"
-                                "background-color: rgba(0, 0, 0, 5);"
-                                "border: 2px solid rgb(255, 255, 255);"
-                                "border-radius: 25px")
-        self.btnA.setGeometry(200, 200, 50, 50)
-
-        self.keyBtns.append(self.btnLeft)
-        self.keyBtns.append(self.btnA)
-
-        self.allBtns.append(self.settingBtn)
-        self.allBtns.append(self.addBtn)
-
-        for btn in self.keyBtns:
-            btn.setAutoRepeatInterval(5)
-            btn.setAutoRepeat(True)
-
-            self.btn_press_connect(btn)
-
-            self.allBtns.append(btn)
-
         self.btn_press_connect(self.settingBtn)
         self.settingBtn.clicked.connect(self.setting_click)
 
         self.btn_press_connect(self.addBtn)
         self.addBtn.clicked.connect(self.add_click)
+
+        self.btn_press_connect(self.closeBtn)
+        self.closeBtn.clicked.connect(self.close)
 
         self.setWindowTitle(self.title)
         self.show()
@@ -180,8 +146,11 @@ class VirtualKeyboard(QWidget):
                                       "border-radius: 25px")
             self.newBtn.setGeometry(500, 100, 50, 50)
             self.btn_press_connect(self.newBtn)
+            self.newBtn.setAutoRepeatInterval(5)
+            self.newBtn.setAutoRepeat(True)
             self.newBtn.show()
             self.keyBtns.append(self.newBtn)
+            self.allBtns.append(self.newBtn)
         except Exception as ex:
             print(ex)
 
@@ -231,6 +200,9 @@ class VirtualKeyboard(QWidget):
             self.mouse_position = self.mouse_position_move
             self.sizeBtn.move(self.width() - 50, self.height() - 25)
 
+            if self.closeBtn.pos().x() >= self.width() - 25:
+                self.closeBtn.move(self.width() - 25, self.closeBtn.pos().y())
+
     def mousePressEvent(self, e: QMouseEvent):
         self.my_position = self.pos()
         self.mouse_position = e.globalPos() - self.my_position
@@ -248,6 +220,99 @@ class VirtualKeyboard(QWidget):
     def mouseReleaseEvent(self, e: QMouseEvent):
         self.currBtn = None
 
+    def add_system_btns(self, settingXY, addXY, closeXY):
+        self.settingBtn = QPushButton('설정', self)
+        self.settingBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                      "background-color: rgba(0, 0, 0, 5);"
+                                      "border: 2px solid rgb(255, 255, 255);"
+                                      "border-radius: 4px")
+        self.settingBtn.setGeometry(settingXY[0], settingXY[1], 60, 30)
+
+        self.addBtn = QPushButton('추가', self)
+        self.addBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                  "background-color: rgba(0, 0, 0, 5);"
+                                  "border: 2px solid rgb(255, 255, 255);"
+                                  "border-radius: 4px")
+        self.addBtn.setGeometry(addXY[0], addXY[1], 60, 30)
+        self.addBtn.hide()
+
+        self.addCombo = QComboBox(self)
+        self.addCombo.addItems(['tab', 'enter', 'enter(r)', 'space', '!', '"', '#', '$', '%', '&', "'", '(',
+                                ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7',
+                                '8', '9', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`',
+                                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+                                'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~',
+                                'accept', 'add', 'alt', 'altleft', 'altright', 'apps', 'backspace',
+                                'browserback', 'browserfavorites', 'browserforward', 'browserhome',
+                                'browserrefresh', 'browsersearch', 'browserstop', 'capslock', 'clear',
+                                'convert', 'ctrl', 'ctrlleft', 'ctrlright', 'decimal', 'del', 'delete',
+                                'divide', 'down', 'end', 'enter', 'esc', 'escape', 'execute', 'f1', 'f10',
+                                'f11', 'f12', 'f13', 'f14', 'f15', 'f16', 'f17', 'f18', 'f19', 'f2', 'f20',
+                                'f21', 'f22', 'f23', 'f24', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9',
+                                'final', 'fn', 'hanguel', 'hangul', 'hanja', 'help', 'home', 'insert', 'junja',
+                                'kana', 'kanji', 'launchapp1', 'launchapp2', 'launchmail',
+                                'launchmediaselect', 'left', 'modechange', 'multiply', 'nexttrack',
+                                'nonconvert', 'num0', 'num1', 'num2', 'num3', 'num4', 'num5', 'num6',
+                                'num7', 'num8', 'num9', 'numlock', 'pagedown', 'pageup', 'pause', 'pgdn',
+                                'pgup', 'playpause', 'prevtrack', 'print', 'printscreen', 'prntscrn',
+                                'prtsc', 'prtscr', 'return', 'right', 'scrolllock', 'select', 'separator',
+                                'shift', 'shiftleft', 'shiftright', 'sleep', 'space', 'stop', 'subtract', 'tab',
+                                'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
+                                'command', 'option', 'optionleft', 'optionright'])
+        self.addCombo.setStyleSheet("color: rgb(255, 255, 255);"
+                                    "background-color: rgba(0, 0, 0, 5);"
+                                    "border: 2px solid rgb(255, 255, 255);"
+                                    "border-radius: 4px")
+        self.addCombo.setGeometry(addXY[0] - 100, addXY[1], 100, 20)
+        self.addCombo.hide()
+
+        self.closeBtn = QPushButton('x', self)
+        self.closeBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                    "background-color: rgba(0, 0, 0, 5);"
+                                    "border: 1px solid rgb(255, 255, 255);"
+                                    )
+        self.closeBtn.setGeometry(closeXY[0], closeXY[1], 25, 25)
+
+        self.allBtns.append(self.settingBtn)
+        self.allBtns.append(self.addBtn)
+        self.allBtns.append(self.closeBtn)
+
+    def save_btns(self):
+        with open('save.txt', 'wt') as fout:
+            print(self.x(), self.y(), self.width(), self.height(), file=fout)
+
+            for btn in self.allBtns:
+                print(btn.text(), btn.pos().x(), btn.pos().y(), file=fout)
+
+    def load_btns(self):
+        with open('save.txt', 'rt') as fin:
+            windowGeo = list(map(int, fin.readline().split()))
+            self.setGeometry(windowGeo[0], windowGeo[1], windowGeo[2], windowGeo[3])
+
+            settingXY = list(map(int, fin.readline().split()[1:3]))
+            addXY = list(map(int, fin.readline().split()[1:3]))
+            closeXY = list(map(int, fin.readline().split()[1:3]))
+
+            self.add_system_btns(settingXY, addXY, closeXY)
+
+            while True:
+                line = fin.readline().split()
+                if not line:
+                    break
+
+                self.newBtn = QPushButton(line[0], self)
+                self.newBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                          "background-color: rgba(0, 0, 0, 5);"
+                                          "border: 2px solid rgb(255, 255, 255);"
+                                          "border-radius: 25px")
+                self.newBtn.setGeometry(int(line[1]), int(line[2]), 50, 50)
+                self.btn_press_connect(self.newBtn)
+                self.newBtn.setAutoRepeatInterval(5)
+                self.newBtn.setAutoRepeat(True)
+                self.newBtn.show()
+                self.keyBtns.append(self.newBtn)
+                self.allBtns.append(self.newBtn)
+
     def no_focus(self):
         import ctypes
         import win32con
@@ -256,6 +321,9 @@ class VirtualKeyboard(QWidget):
         dc = user32.FindWindowW(0, self.title)
         user32.SetWindowLongPtrW(dc, win32con.GWL_EXSTYLE, user32.GetWindowLongPtrW(dc, win32con.GWL_EXSTYLE)
                                  | win32con.WS_EX_NOACTIVATE | win32con.WS_EX_APPWINDOW)
+
+    def closeEvent(self, e):
+        self.save_btns()
 
 
 if __name__ == '__main__':
