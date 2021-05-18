@@ -2,7 +2,7 @@ import sys
 
 from PyQt5.QtCore import Qt, QMimeData, QPoint
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QComboBox
-from PyQt5.QtGui import QDropEvent, QDragEnterEvent, QMouseEvent, QDrag, QMoveEvent
+from PyQt5.QtGui import QDropEvent, QMouseEvent, QDrag
 
 import pyautogui
 
@@ -31,20 +31,23 @@ class VirtualKeyboard(QWidget):
     def initUI(self):
         self.setGeometry(300, 300, 700, 400)
 
+        # setting mode background
         self.settingBackground = QLabel('', self)
         self.settingBackground.hide()
         self.settingBackground.setGeometry(0, 0, 1000, 1000)
         self.setStyleSheet("background-color: rgba(0, 0, 0, 100)")
 
+        # load saved data
         import os
         if os.path.exists('save.txt'):
             try:
                 self.load_btns()
             except Exception as e:
-                print(e)
+                # not good 'save.txt' -> restart
                 os.remove('save.txt')
                 os.execl(sys.executable, sys.executable, *sys.argv)
         else:
+            # initial setting
             self.add_system_btns([600, 50], [500, 50], [self.width() - 25, 0])
 
             self.btnLeft = QPushButton('Left', self)
@@ -65,6 +68,7 @@ class VirtualKeyboard(QWidget):
             self.keyBtns.append(self.btnA)
 
             for btn in self.keyBtns:
+                # key repeat setting
                 btn.setAutoRepeatInterval(5)
                 btn.setAutoRepeat(True)
 
@@ -72,6 +76,7 @@ class VirtualKeyboard(QWidget):
 
                 self.allBtns.append(btn)
 
+        # button that drag and move window
         self.moveBtn = QLabel('---', self)
         self.moveBtn.setAlignment(Qt.AlignCenter)
         self.moveBtn.setStyleSheet("color: rgb(255, 255, 255);"
@@ -80,6 +85,7 @@ class VirtualKeyboard(QWidget):
                                    )
         self.moveBtn.setGeometry(0, 0, 50, 25)
 
+        # button that adjust window size by drag
         self.sizeBtn = QLabel('---', self)
         self.sizeBtn.setAlignment(Qt.AlignCenter)
         self.sizeBtn.setStyleSheet("color: rgb(255, 255, 255);"
@@ -115,6 +121,7 @@ class VirtualKeyboard(QWidget):
         self.sizeEn = False
 
     def setting_click(self):
+        """switching to normal/setting mode"""
         if self.setting:
             self.setting = False
             self.settingBtn.setStyleSheet("color: rgb(255, 255, 255);"
@@ -138,23 +145,22 @@ class VirtualKeyboard(QWidget):
             self.addCombo.show()
 
     def add_click(self):
-        try:
-            self.newBtn = QPushButton(self.addCombo.currentText(), self)
-            self.newBtn.setStyleSheet("color: rgb(255, 255, 255);"
-                                      "background-color: rgba(0, 0, 0, 5);"
-                                      "border: 2px solid rgb(255, 255, 255);"
-                                      "border-radius: 25px")
-            self.newBtn.setGeometry(500, 100, 50, 50)
-            self.btn_press_connect(self.newBtn)
-            self.newBtn.setAutoRepeatInterval(5)
-            self.newBtn.setAutoRepeat(True)
-            self.newBtn.show()
-            self.keyBtns.append(self.newBtn)
-            self.allBtns.append(self.newBtn)
-        except Exception as ex:
-            print(ex)
+        """add new key button"""
+        self.newBtn = QPushButton(self.addCombo.currentText(), self)
+        self.newBtn.setStyleSheet("color: rgb(255, 255, 255);"
+                                  "background-color: rgba(0, 0, 0, 5);"
+                                  "border: 2px solid rgb(255, 255, 255);"
+                                  "border-radius: 25px")
+        self.newBtn.setGeometry(500, 100, 50, 50)
+        self.btn_press_connect(self.newBtn)
+        self.newBtn.setAutoRepeatInterval(5)
+        self.newBtn.setAutoRepeat(True)
+        self.newBtn.show()
+        self.keyBtns.append(self.newBtn)
+        self.allBtns.append(self.newBtn)
 
     def convert_key_str(self, text):
+        """convert key button's text into text that pyautogui serves"""
         if text == 'tab':
             return '\t'
         elif text == 'enter':
@@ -167,6 +173,10 @@ class VirtualKeyboard(QWidget):
             return text
 
     def dropEvent(self, e: QDropEvent):
+        """
+        drag and drop buttons in setting mode
+        (add button and add combobox move together)
+        """
         if self.setting and self.currBtn is not None:
             position = e.pos()
             self.currBtn.move(position)
@@ -182,6 +192,11 @@ class VirtualKeyboard(QWidget):
         e.accept()
 
     def mouseMoveEvent(self, e: QMouseEvent):
+        """
+        key button: make meme data for drag
+        move button: move window
+        size button: adjust size of window
+        """
         if e.buttons() == Qt.RightButton:
             return
 
@@ -200,10 +215,15 @@ class VirtualKeyboard(QWidget):
             self.mouse_position = self.mouse_position_move
             self.sizeBtn.move(self.width() - 50, self.height() - 25)
 
+            # if close button escape window range, move
             if self.closeBtn.pos().x() >= self.width() - 25:
                 self.closeBtn.move(self.width() - 25, self.closeBtn.pos().y())
 
     def mousePressEvent(self, e: QMouseEvent):
+        """
+        get mouse position
+        check whether move or size button by mouse's x pos
+        """
         self.my_position = self.pos()
         self.mouse_position = e.globalPos() - self.my_position
         self.mid_x = self.my_position.x() + self.width()/2
@@ -221,6 +241,12 @@ class VirtualKeyboard(QWidget):
         self.currBtn = None
 
     def add_system_btns(self, settingXY, addXY, closeXY):
+        """
+        add system buttons(setting, add, close)
+        :param settingXY: setting button position [x, y]
+        :param addXY: same
+        :param closeXY: same
+        """
         self.settingBtn = QPushButton('설정', self)
         self.settingBtn.setStyleSheet("color: rgb(255, 255, 255);"
                                       "background-color: rgba(0, 0, 0, 5);"
@@ -278,6 +304,7 @@ class VirtualKeyboard(QWidget):
         self.allBtns.append(self.closeBtn)
 
     def save_btns(self):
+        """save window geometry and button's position"""
         with open('save.txt', 'wt') as fout:
             print(self.x(), self.y(), self.width(), self.height(), file=fout)
 
@@ -285,6 +312,7 @@ class VirtualKeyboard(QWidget):
                 print(btn.text(), btn.pos().x(), btn.pos().y(), file=fout)
 
     def load_btns(self):
+        """load data from save.txt"""
         with open('save.txt', 'rt') as fin:
             windowGeo = list(map(int, fin.readline().split()))
             self.setGeometry(windowGeo[0], windowGeo[1], windowGeo[2], windowGeo[3])
@@ -314,6 +342,7 @@ class VirtualKeyboard(QWidget):
                 self.allBtns.append(self.newBtn)
 
     def no_focus(self):
+        """set window No Activate mode"""
         import ctypes
         import win32con
 
